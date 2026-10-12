@@ -2,6 +2,10 @@
 
 Aplicativo Windows para configurar bônus de talismã e Preferred List, visualizar a live e criar um overlay transparente para o OBS. A interface desktop inclui o painel, o servidor local e o codificador de vídeo; o modo Windows não exige Python nem privilégios de administrador. O WebView2 Runtime do Windows é necessário.
 
+## Baixar o aplicativo
+
+O executável Windows pronto para uso está disponível diretamente na raiz deste repositório: [baixar BountyStudio.exe](https://github.com/imzallan/Bounty-Studio/raw/refs/heads/main/BountyStudio.exe). No Windows, salve o arquivo em uma pasta gravável pelo usuário, como Downloads, e abra-o. O aplicativo consulta atualizações estáveis do GitHub ao iniciar.
+
 ## Projeto
 
 ```text
@@ -41,7 +45,7 @@ O atualizador não solicita elevação de administrador. Portanto, o executável
 - Faça alterações da interface em `src/BountyStudio.Web/`.
 - O servidor Windows é PowerShell 5.1+, sem módulos externos; `src/BountyStudio.Server/servidor.py` usa somente a biblioteca padrão do Python 3.8+.
 - Atualize `VERSION` e publique uma tag `v<versão>` para distribuir uma release.
-- Mantenha dados de usuários, executáveis locais e caches fora dos commits.
+- Mantenha dados de usuários e caches fora dos commits. Builds locais continuam em `dist/`; o `BountyStudio.exe` da raiz é a distribuição Windows incluída no repositório.
 - Consulte `docs/GUIA.md` para o uso do aplicativo e `docs/CREDITOS.md` para os componentes e licenças de terceiros.
 
 ## Licença
