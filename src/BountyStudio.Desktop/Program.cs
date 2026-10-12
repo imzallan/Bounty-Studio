@@ -619,15 +619,15 @@ namespace BountyStudio
                 using (Pen glow = new Pen(Color.FromArgb(90, AccentColor), 1F)) e.Graphics.DrawLine(glow, 19, 8, 29, 8);
             };
             card.Controls.Add(iconBadge);
-            Label kicker = new Label { Text = "Bounty Studio", Font = new Font("Segoe UI Semibold", 18F, FontStyle.Bold), ForeColor = AccentColor, AutoSize = false, TextAlign = ContentAlignment.MiddleLeft, Location = new Point(122, 45), Size = new Size(430, 34) };
+            Label kicker = new Label { Text = "Bounty Studio", Font = new Font("Segoe UI Semibold", 18F, FontStyle.Bold), ForeColor = AccentColor, BackColor = Color.Transparent, AutoSize = false, TextAlign = ContentAlignment.MiddleLeft, Location = new Point(122, 45), Size = new Size(430, 34) };
             card.Controls.Add(kicker);
-            Label title = new Label { Text = "Live Control", Font = new Font("Segoe UI Semibold", 31F, FontStyle.Bold), ForeColor = TextColor, AutoSize = false, TextAlign = ContentAlignment.MiddleLeft, Location = new Point(48, 132), Size = new Size(480, 56) };
+            Label title = new Label { Text = "Live Control", Font = new Font("Segoe UI Semibold", 31F, FontStyle.Bold), ForeColor = TextColor, BackColor = Color.Transparent, AutoSize = false, TextAlign = ContentAlignment.MiddleLeft, Location = new Point(48, 132), Size = new Size(480, 56) };
             card.Controls.Add(title);
-            Label tagline = new Label { Text = "Bônus, Preferred List e overlay em um só lugar.", Font = new Font("Segoe UI", 10F), ForeColor = MutedColor, AutoSize = false, TextAlign = ContentAlignment.MiddleLeft, Location = new Point(50, 198), Size = new Size(458, 36) };
+            Label tagline = new Label { Text = "Bônus, Preferred List e overlay em um só lugar.", Font = new Font("Segoe UI", 10F), ForeColor = MutedColor, BackColor = Color.Transparent, AutoSize = false, TextAlign = ContentAlignment.MiddleLeft, Location = new Point(50, 198), Size = new Size(458, 36) };
             card.Controls.Add(tagline);
-            loadingStatus = new Label { Text = "Preparando o painel...", Font = new Font("Segoe UI Semibold", 10F, FontStyle.Bold), ForeColor = AccentColor, AutoSize = false, TextAlign = ContentAlignment.MiddleLeft, Location = new Point(50, 278), Size = new Size(460, 27) };
+            loadingStatus = new Label { Text = "Preparando o painel...", Font = new Font("Segoe UI Semibold", 10F, FontStyle.Bold), ForeColor = AccentColor, BackColor = Color.Transparent, AutoSize = false, TextAlign = ContentAlignment.MiddleLeft, Location = new Point(50, 278), Size = new Size(460, 27) };
             card.Controls.Add(loadingStatus);
-            loadingDetails = new Label { Text = "Iniciando o servidor local", Font = new Font("Segoe UI", 9F), ForeColor = MutedColor, AutoSize = false, TextAlign = ContentAlignment.MiddleLeft, Location = new Point(50, 307), Size = new Size(460, 24) };
+            loadingDetails = new Label { Text = "Iniciando o servidor local", Font = new Font("Segoe UI", 9F), ForeColor = MutedColor, BackColor = Color.Transparent, AutoSize = false, TextAlign = ContentAlignment.MiddleLeft, Location = new Point(50, 307), Size = new Size(460, 24) };
             card.Controls.Add(loadingDetails);
             progress = new StudioProgressIndicator { Location = new Point(50, 360), Size = new Size(460, 9) };
             card.Controls.Add(progress);
@@ -644,6 +644,7 @@ namespace BountyStudio
             {
                 Text = "Instalar WebView2 Runtime da Microsoft", Visible = false,
                 LinkColor = AccentColor, ActiveLinkColor = AccentColor, VisitedLinkColor = AccentColor,
+                BackColor = Color.Transparent,
                 AutoSize = false, TextAlign = ContentAlignment.MiddleLeft, Location = new Point(50, 438), Size = new Size(470, 20), Font = new Font("Segoe UI", 8.5F)
             };
             runtimeLink.LinkClicked += delegate { OpenRuntimeDownload(); };
