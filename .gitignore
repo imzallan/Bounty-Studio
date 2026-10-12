@@ -1,0 +1,21 @@
+# User data: local settings, points, creature cache, and downloaded sprites
+/dados/
+
+# Generated application packages and compiler output
+/dist/
+/src/BountyStudio.Desktop/obj/
+*.pdb
+*.ilk
+*.tmp
+
+# Python and editor artifacts
+__pycache__/
+*.py[cod]
+.DS_Store
+Thumbs.db
+.vs/
+.vscode/
+
+# Local logs and runtime profiles
+*.log
+WebView2Data/

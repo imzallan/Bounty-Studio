@@ -1,0 +1,9 @@
+{
+  "file": "ffmpeg.exe",
+  "platform": "windows-x64",
+  "version": "20181217-f22fcd4",
+  "size": 64458752,
+  "sha256": "c8abc49e7be62dde8e12972af373959e0076a7b8dc8040eb45978e0608f8781e",
+  "package": "@ffmpeg-installer/win32-x64@4.1.0",
+  "source": "https://registry.npmjs.org/@ffmpeg-installer/win32-x64/-/win32-x64-4.1.0.tgz"
+}

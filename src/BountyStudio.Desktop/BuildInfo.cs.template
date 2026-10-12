@@ -1,0 +1,8 @@
+namespace BountyStudio
+{
+    internal static class BuildInfo
+    {
+        internal const string Version = "__VERSION__";
+        internal const string GitHubRepository = "__GITHUB_REPOSITORY__";
+    }
+}

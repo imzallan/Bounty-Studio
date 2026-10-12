@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256">
+  <defs>
+    <linearGradient id="panel" x1="30" y1="20" x2="220" y2="236" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#1b302c"/><stop offset="1" stop-color="#080d14"/>
+    </linearGradient>
+    <linearGradient id="gem" x1="86" y1="76" x2="170" y2="188" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#b8ffdf"/><stop offset=".42" stop-color="#57e6ae"/><stop offset="1" stop-color="#1c7256"/>
+    </linearGradient>
+    <linearGradient id="gold" x1="58" y1="72" x2="203" y2="185" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#fff0b5"/><stop offset="1" stop-color="#d9a94e"/>
+    </linearGradient>
+  </defs>
+  <rect x="19" y="19" width="218" height="218" rx="54" fill="url(#panel)" stroke="url(#gold)" stroke-width="5"/>
+  <circle cx="128" cy="128" r="78" fill="none" stroke="#57e6ae" stroke-opacity=".3" stroke-width="3"/>
+  <circle cx="128" cy="128" r="64" fill="none" stroke="#edc979" stroke-opacity=".72" stroke-width="2" stroke-dasharray="2 12"/>
+  <path d="m128 69 56 59-56 59-56-59z" fill="url(#gem)" stroke="url(#gold)" stroke-width="4" stroke-linejoin="round"/>
+  <path d="m128 69-17 59 17 59 17-59zM72 128h112" fill="none" stroke="#e8fff5" stroke-opacity=".62" stroke-width="3" stroke-linejoin="round"/>
+  <path d="m128 42 5 8-5 8-5-8zM128 198l5 8-5 8-5-8z" fill="#fff0b5"/>
+</svg>
