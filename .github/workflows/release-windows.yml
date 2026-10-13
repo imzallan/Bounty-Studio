@@ -5,15 +5,19 @@ on:
     tags:
       - 'v*'
 
-permissions:
-  contents: write
+permissions: {}
 
 jobs:
-  build-and-release:
+  build:
     runs-on: windows-latest
+    timeout-minutes: 30
+    permissions:
+      contents: read
     steps:
       - name: Checkout source
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          persist-credentials: false
 
       - name: Build desktop application
         shell: pwsh
@@ -23,10 +27,56 @@ jobs:
           if ($version -ne $projectVersion) { throw "A tag $version precisa corresponder à versão $projectVersion do arquivo VERSION." }
           ./src/BountyStudio.Desktop/build.ps1 -Version $version -GitHubRepository $env:GITHUB_REPOSITORY
 
+      - name: Save the built executable
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: BountyStudio
+          path: dist/BountyStudio.exe
+          if-no-files-found: error
+          retention-days: 1
+          compression-level: 0
+
+  attest:
+    needs: build
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
+      id-token: write
+      attestations: write
+    steps:
+      - name: Download the built executable
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          name: BountyStudio
+          path: dist
+          digest-mismatch: error
+
+      - name: Create build provenance attestation
+        uses: actions/attest@1e69f48acb82d1966a394da916b4c1698aa569d6 # v4.2.2
+        with:
+          subject-path: dist/BountyStudio.exe
+
+  publish:
+    needs: attest
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: write
+    steps:
+      - name: Download the attested executable
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          name: BountyStudio
+          path: dist
+          digest-mismatch: error
+
       - name: Publish GitHub release
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        shell: pwsh
+          TAG: ${{ github.ref_name }}
+        shell: bash
+        working-directory: dist
         run: |
-          $tag = $env:GITHUB_REF_NAME
-          gh release create $tag dist/BountyStudio.exe --title "Bounty Studio $tag" --generate-notes
+          sha256sum BountyStudio.exe > BountyStudio.exe.sha256
+          gh release create "$TAG" BountyStudio.exe BountyStudio.exe.sha256 --title "Bounty Studio $TAG" --generate-notes --verify-tag

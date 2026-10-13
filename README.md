@@ -40,6 +40,10 @@ Crie uma release estável com uma tag SemVer, por exemplo `v1.0.1`. A action `.g
 
 O atualizador não solicita elevação de administrador. Portanto, o executável deve ficar em uma pasta gravável pelo usuário (como Downloads ou `%LOCALAPPDATA%`). Não há certificado Authenticode incluído; a verificação do asset reduz riscos de corrupção ou troca no transporte, mas não substitui a assinatura digital do publicador.
 
+As próximas releases geradas pelo workflow também terão um arquivo SHA-256 e uma atestação de procedência do GitHub. Para verificar a origem do executável baixado, instale o GitHub CLI e execute `gh attestation verify BountyStudio.exe -R imzallan/Bounty-Studio`. O atualizador integrado continua validando o digest publicado pelo GitHub; ele não verifica a atestação Sigstore nem uma assinatura Authenticode.
+
+Consulte [docs/SEGURANCA_GITHUB.md](docs/SEGURANCA_GITHUB.md) para configurar a proteção da branch principal, das tags de release, da conta mantenedora e dos recursos de segurança do GitHub.
+
 ## Desenvolvimento
 
 - Faça alterações da interface em `src/BountyStudio.Web/`.
