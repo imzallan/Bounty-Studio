@@ -422,6 +422,8 @@ def ffmpeg_path():
     if os.name == 'nt' and bundled.is_file():
         validate_bundled_encoder(bundled)
         return check_encoder(str(bundled))
+    if os.name == 'nt':
+        raise ValueError('Codificador FFmpeg não encontrado na pasta tools ou corrompido. Extraia o pacote completo.')
     binary = shutil.which('ffmpeg')
     if not binary:
         raise ValueError('FFmpeg não encontrado. No Windows, extraia o pacote completo; no macOS/Linux, instale o FFmpeg para exportar.')
@@ -491,6 +493,9 @@ class Handler(BaseHTTPRequestHandler):
         self.send_header("Content-Length", str(len(body)))
         self.send_header("Cache-Control", "no-store")
         self.send_header("X-Content-Type-Options", "nosniff")
+        self.send_header("X-Frame-Options", "SAMEORIGIN")
+        self.send_header("Content-Security-Policy", "default-src 'self' 'unsafe-inline' data:; connect-src 'self'; img-src 'self' data: https://www.tibiawiki.com.br; frame-ancestors 'self';")
+        self.send_header("Referrer-Policy", "strict-origin-when-cross-origin")
         self.send_header("Connection", "close")
         self.end_headers()
         self.close_connection = True
@@ -500,13 +505,22 @@ class Handler(BaseHTTPRequestHandler):
             pass
 
     def allowed(self):
-        hosts = {"127.0.0.1:" + str(self.server.server_port), "localhost:" + str(self.server.server_port)}
+        fetch_site = self.headers.get("Sec-Fetch-Site")
+        if fetch_site == "cross-site":
+            self.reply(403, {"error": "Acesso cross-site não autorizado."})
+            return False
+        port = str(self.server.server_port)
+        hosts = {"127.0.0.1:" + port, "localhost:" + port}
         if self.headers.get("Host", "") not in hosts:
             self.reply(403, {"error": "Endereço local inválido."})
             return False
         origin = self.headers.get("Origin")
-        if origin and origin != "http://" + self.headers.get("Host", ""):
+        if origin and origin not in ("http://127.0.0.1:" + port, "http://localhost:" + port):
             self.reply(403, {"error": "Origem inválida."})
+            return False
+        referer = self.headers.get("Referer")
+        if referer and not (referer.startswith("http://127.0.0.1:" + port + "/") or referer.startswith("http://localhost:" + port + "/")):
+            self.reply(403, {"error": "Origem de navegação não autorizada."})
             return False
         return True
 

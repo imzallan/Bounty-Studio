@@ -3,6 +3,7 @@
 
 # Generated application packages and compiler output
 /dist/
+/BountyStudio.exe
 /src/BountyStudio.Desktop/obj/
 *.pdb
 *.ilk
@@ -19,3 +20,4 @@ Thumbs.db
 # Local logs and runtime profiles
 *.log
 WebView2Data/
+virus-scan-*.txt
