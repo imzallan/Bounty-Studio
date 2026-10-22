@@ -187,7 +187,7 @@ function Write-BountyResponse($Stream, [int]$Code, $Body, [string]$ContentType='
     # Preserve empty byte arrays (PowerShell otherwise unwraps them to null).
     if ($null -eq $bytes) { $bytes = [byte[]]@() }
     $reason = switch ($Code) {200 {'OK'} 204 {'No Content'} 302 {'Found'} 400 {'Bad Request'} 403 {'Forbidden'} 404 {'Not Found'} 405 {'Method Not Allowed'} 415 {'Unsupported Media Type'} default {'Internal Server Error'}}
-    $header = "HTTP/1.1 $Code $reason`r`nContent-Type: $ContentType`r`nContent-Length: $($bytes.Length)`r`nCache-Control: no-store`r`nX-Content-Type-Options: nosniff`r`nConnection: close`r`n"
+    $header = "HTTP/1.1 $Code $reason`r`nContent-Type: $ContentType`r`nContent-Length: $($bytes.Length)`r`nCache-Control: no-store`r`nX-Content-Type-Options: nosniff`r`nX-Frame-Options: SAMEORIGIN`r`nContent-Security-Policy: default-src 'self' 'unsafe-inline' data:; connect-src 'self'; img-src 'self' data: https://www.tibiawiki.com.br; frame-ancestors 'self';`r`nReferrer-Policy: strict-origin-when-cross-origin`r`nConnection: close`r`n"
     if ($Location) { $header += "Location: $Location`r`n" }
     $header += "`r`n"
     $headerBytes = [System.Text.Encoding]::ASCII.GetBytes($header)
@@ -515,8 +515,12 @@ try {
                 $colon = $line.IndexOf(':')
                 if ($colon -gt 0) { $headers[$line.Substring(0,$colon).Trim()] = $line.Substring($colon+1).Trim() }
             }
+            if ($headers.ContainsKey('Sec-Fetch-Site') -and $headers['Sec-Fetch-Site'] -eq 'cross-site') { Write-BountyResponse $stream 403 @{error='Acesso cross-site nao autorizado.'}; continue }
             if ($headers['Host'] -notin @("127.0.0.1:$Port", "localhost:$Port")) { Write-BountyResponse $stream 403 @{error='Endereco local invalido.'}; continue }
-            if ($headers.ContainsKey('Origin') -and $headers['Origin'] -ne ('http://' + $headers['Host'])) { Write-BountyResponse $stream 403 @{error='Origem invalida.'}; continue }
+            if ($headers.ContainsKey('Origin') -and $headers['Origin'] -notin @("http://127.0.0.1:$Port", "http://localhost:$Port")) { Write-BountyResponse $stream 403 @{error='Origem invalida.'}; continue }
+            if ($headers.ContainsKey('Referer') -and -not ($headers['Referer'].StartsWith("http://127.0.0.1:$Port/") -or $headers['Referer'].StartsWith("http://localhost:$Port/"))) {
+                Write-BountyResponse $stream 403 @{error='Origem de navegacao nao autorizada.'}; continue
+            }
             if ($method -eq 'GET') {
                 if ($path -in @('/api/sprite','/api/charm-icon','/api/creature-info','/api/export/status','/api/export/video')) {
                     try { Handle-BountyAsset $stream $path $query }

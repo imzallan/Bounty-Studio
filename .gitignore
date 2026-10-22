@@ -3,6 +3,7 @@
 
 # Generated application packages and compiler output
 /dist/
+/BountyStudio.exe
 /src/BountyStudio.Desktop/obj/
 *.pdb
 *.ilk

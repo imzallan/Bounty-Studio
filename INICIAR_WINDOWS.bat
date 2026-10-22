@@ -18,7 +18,7 @@ if not errorlevel 1 (
     goto finish
   )
 )
-powershell.exe -NoLogo -NoProfile -ExecutionPolicy Bypass -File "%~dp0src\BountyStudio.Server\servidor-windows.ps1"
+powershell.exe -NoLogo -NoProfile -ExecutionPolicy RemoteSigned -File "%~dp0src\BountyStudio.Server\servidor-windows.ps1"
 :finish
 if errorlevel 1 (
   echo.
