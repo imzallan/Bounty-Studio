@@ -35,8 +35,101 @@ if SOURCE_MODE:
     display_version = "v" + ".".join(version_text[:2]) if len(version_text) >= 2 else "v1.0"
     HTML = HTML.replace(b'<span class="app-version">v1.0</span>',
                         ('<span class="app-version">' + display_version + '</span>').encode("ascii"))
-DEFAULTS = json.loads(re.search(rb'<script id="bounty-defaults" type="application/json">(.*?)</script>', HTML, re.S).group(1))
-RULES = json.loads(re.search(rb'<script id="bounty-rules" type="application/json">(.*?)</script>', HTML, re.S).group(1))
+DATA_ROOT = ROOT / "src" / "BountyStudio.Shared" / "Data"
+HAS_SHARED_DATA = (DATA_ROOT / "rules.json").is_file()
+
+if HAS_SHARED_DATA:
+    DEFAULTS = json.loads((DATA_ROOT / "defaults.json").read_text(encoding="utf-8"))
+    RULES = json.loads((DATA_ROOT / "rules.json").read_text(encoding="utf-8"))
+    SLOT_COSTS = json.loads((DATA_ROOT / "slot-costs.json").read_text(encoding="utf-8"))
+    CREATURES = {c['name'].casefold(): c for c in json.loads((DATA_ROOT / "creatures.json").read_text(encoding="utf-8"))}
+    EMBEDDED_SPRITES = json.loads((DATA_ROOT / "sprites.json").read_text(encoding="utf-8"))
+    if (DATA_ROOT / "charms.json").is_file():
+        charms_data = json.loads((DATA_ROOT / "charms.json").read_text(encoding="utf-8"))
+        MAJOR_CHARMS = set(charms_data["majorCharms"])
+        MINOR_CHARMS = set(charms_data["minorCharms"])
+        CHARM_ICON_URLS = charms_data["charmIconUrls"]
+        BOUNTY_DIFFICULTIES = set(charms_data["difficulties"])
+    else:
+        MAJOR_CHARMS = {
+            'Carnage', 'Curse', 'Divine Wrath', 'Dodge', 'Enflame', 'Freeze', 'Low Blow',
+            'Overpower', 'Overflux', 'Parry', 'Poison', 'Savage Blow', 'Wound', 'Zap',
+        }
+        MINOR_CHARMS = {
+            'Adrenaline Burst', 'Bless', 'Cleanse', 'Cripple', 'Fatal Hold', 'Gut',
+            'Numb', 'Scavenge', 'Vampiric Embrace', 'Void Inversion', "Void's Call",
+        }
+        CHARM_ICON_URLS = {
+            'Carnage': 'https://www.tibiawiki.com.br/images/3/30/Carnage_Icon.gif',
+            'Curse': 'https://www.tibiawiki.com.br/images/e/e3/Curse_Icon.gif',
+            'Divine Wrath': 'https://www.tibiawiki.com.br/images/c/cc/Divine_Wrath_Icon.gif',
+            'Dodge': 'https://www.tibiawiki.com.br/images/2/25/Dodge_Icon.gif',
+            'Enflame': 'https://www.tibiawiki.com.br/images/7/74/Enflame_Icon.gif',
+            'Freeze': 'https://www.tibiawiki.com.br/images/7/72/Freeze_Icon.gif',
+            'Low Blow': 'https://www.tibiawiki.com.br/images/8/8c/Low_Blow_Icon.gif',
+            'Overpower': 'https://www.tibiawiki.com.br/images/2/2b/Overpower_Icon.gif',
+            'Overflux': 'https://www.tibiawiki.com.br/images/2/20/Overflux_Icon.gif',
+            'Parry': 'https://www.tibiawiki.com.br/images/a/a8/Parry_Icon.gif',
+            'Poison': 'https://www.tibiawiki.com.br/images/5/59/Poison_Icon.gif',
+            'Savage Blow': 'https://www.tibiawiki.com.br/images/e/e6/Savage_Blow_Icon.gif',
+            'Wound': 'https://www.tibiawiki.com.br/images/d/d9/Wound_Icon.gif',
+            'Zap': 'https://www.tibiawiki.com.br/images/2/2f/Zap_Icon.gif',
+            'Adrenaline Burst': 'https://www.tibiawiki.com.br/images/1/1d/Adrenaline_Burst_Icon.gif',
+            'Bless': 'https://www.tibiawiki.com.br/images/6/6c/Bless_Icon.gif',
+            'Cleanse': 'https://www.tibiawiki.com.br/images/9/92/Cleanse_Icon.gif',
+            'Cripple': 'https://www.tibiawiki.com.br/images/9/9c/Cripple_Icon.gif',
+            'Fatal Hold': 'https://www.tibiawiki.com.br/images/b/b8/Fatal_Hold_Icon.gif',
+            'Gut': 'https://www.tibiawiki.com.br/images/f/f0/Gut_Icon.gif',
+            'Numb': 'https://www.tibiawiki.com.br/images/0/03/Numb_Icon.gif',
+            'Scavenge': 'https://www.tibiawiki.com.br/images/5/5f/Scavenge_Icon.gif',
+            'Vampiric Embrace': 'https://www.tibiawiki.com.br/images/4/41/Vampiric_Embrace_Icon.gif',
+            'Void Inversion': 'https://www.tibiawiki.com.br/images/7/79/Void_Inversion_Icon.gif',
+            "Void's Call": 'https://www.tibiawiki.com.br/images/c/c6/Void%27s_Call_Icon.gif',
+        }
+        BOUNTY_DIFFICULTIES = {'', 'Beginner', 'Adept', 'Expert', 'Master'}
+else:
+    DEFAULTS = json.loads(re.search(rb'<script id="bounty-defaults" type="application/json">(.*?)</script>', HTML, re.S).group(1))
+    RULES = json.loads(re.search(rb'<script id="bounty-rules" type="application/json">(.*?)</script>', HTML, re.S).group(1))
+    SLOT_COSTS = json.loads(re.search(rb'<script id="bounty-slot-costs" type="application/json">(.*?)</script>', HTML, re.S).group(1))
+    CREATURES = {c['name'].casefold(): c for c in json.loads(re.search(rb'<script id="bounty-creatures" type="application/json">(.*?)</script>', HTML, re.S).group(1))}
+    EMBEDDED_SPRITES = json.loads(re.search(rb'<script id="bounty-sprites" type="application/json">(.*?)</script>', HTML, re.S).group(1))
+    MAJOR_CHARMS = {
+        'Carnage', 'Curse', 'Divine Wrath', 'Dodge', 'Enflame', 'Freeze', 'Low Blow',
+        'Overpower', 'Overflux', 'Parry', 'Poison', 'Savage Blow', 'Wound', 'Zap',
+    }
+    MINOR_CHARMS = {
+        'Adrenaline Burst', 'Bless', 'Cleanse', 'Cripple', 'Fatal Hold', 'Gut',
+        'Numb', 'Scavenge', 'Vampiric Embrace', 'Void Inversion', "Void's Call",
+    }
+    CHARM_ICON_URLS = {
+        'Carnage': 'https://www.tibiawiki.com.br/images/3/30/Carnage_Icon.gif',
+        'Curse': 'https://www.tibiawiki.com.br/images/e/e3/Curse_Icon.gif',
+        'Divine Wrath': 'https://www.tibiawiki.com.br/images/c/cc/Divine_Wrath_Icon.gif',
+        'Dodge': 'https://www.tibiawiki.com.br/images/2/25/Dodge_Icon.gif',
+        'Enflame': 'https://www.tibiawiki.com.br/images/7/74/Enflame_Icon.gif',
+        'Freeze': 'https://www.tibiawiki.com.br/images/7/72/Freeze_Icon.gif',
+        'Low Blow': 'https://www.tibiawiki.com.br/images/8/8c/Low_Blow_Icon.gif',
+        'Overpower': 'https://www.tibiawiki.com.br/images/2/2b/Overpower_Icon.gif',
+        'Overflux': 'https://www.tibiawiki.com.br/images/2/20/Overflux_Icon.gif',
+        'Parry': 'https://www.tibiawiki.com.br/images/a/a8/Parry_Icon.gif',
+        'Poison': 'https://www.tibiawiki.com.br/images/5/59/Poison_Icon.gif',
+        'Savage Blow': 'https://www.tibiawiki.com.br/images/e/e6/Savage_Blow_Icon.gif',
+        'Wound': 'https://www.tibiawiki.com.br/images/d/d9/Wound_Icon.gif',
+        'Zap': 'https://www.tibiawiki.com.br/images/2/2f/Zap_Icon.gif',
+        'Adrenaline Burst': 'https://www.tibiawiki.com.br/images/1/1d/Adrenaline_Burst_Icon.gif',
+        'Bless': 'https://www.tibiawiki.com.br/images/6/6c/Bless_Icon.gif',
+        'Cleanse': 'https://www.tibiawiki.com.br/images/9/92/Cleanse_Icon.gif',
+        'Cripple': 'https://www.tibiawiki.com.br/images/9/9c/Cripple_Icon.gif',
+        'Fatal Hold': 'https://www.tibiawiki.com.br/images/b/b8/Fatal_Hold_Icon.gif',
+        'Gut': 'https://www.tibiawiki.com.br/images/f/f0/Gut_Icon.gif',
+        'Numb': 'https://www.tibiawiki.com.br/images/0/03/Numb_Icon.gif',
+        'Scavenge': 'https://www.tibiawiki.com.br/images/5/5f/Scavenge_Icon.gif',
+        'Vampiric Embrace': 'https://www.tibiawiki.com.br/images/4/41/Vampiric_Embrace_Icon.gif',
+        'Void Inversion': 'https://www.tibiawiki.com.br/images/7/79/Void_Inversion_Icon.gif',
+        "Void's Call": 'https://www.tibiawiki.com.br/images/c/c6/Void%27s_Call_Icon.gif',
+    }
+    BOUNTY_DIFFICULTIES = {'', 'Beginner', 'Adept', 'Expert', 'Master'}
+
 LIMITS = {key: rule["max"] for key, rule in RULES.items()}
 
 
@@ -59,45 +152,6 @@ def build_level_table(rule):
 LEVEL_TABLES = {key: build_level_table(rule) for key, rule in RULES.items()}
 LEVEL_VALUES = {key: table['values'] for key, table in LEVEL_TABLES.items()}
 SPENT_BY_LEVEL = {key: table['spent'] for key, table in LEVEL_TABLES.items()}
-SLOT_COSTS = json.loads(re.search(rb'<script id="bounty-slot-costs" type="application/json">(.*?)</script>', HTML, re.S).group(1))
-CREATURES = {c['name'].casefold(): c for c in json.loads(re.search(rb'<script id="bounty-creatures" type="application/json">(.*?)</script>', HTML, re.S).group(1))}
-EMBEDDED_SPRITES = json.loads(re.search(rb'<script id="bounty-sprites" type="application/json">(.*?)</script>', HTML, re.S).group(1))
-MAJOR_CHARMS = {
-    'Carnage', 'Curse', 'Divine Wrath', 'Dodge', 'Enflame', 'Freeze', 'Low Blow',
-    'Overpower', 'Overflux', 'Parry', 'Poison', 'Savage Blow', 'Wound', 'Zap',
-}
-MINOR_CHARMS = {
-    'Adrenaline Burst', 'Bless', 'Cleanse', 'Cripple', 'Fatal Hold', 'Gut',
-    'Numb', 'Scavenge', 'Vampiric Embrace', 'Void Inversion', "Void's Call",
-}
-CHARM_ICON_URLS = {
-    'Carnage': 'https://www.tibiawiki.com.br/images/3/30/Carnage_Icon.gif',
-    'Curse': 'https://www.tibiawiki.com.br/images/e/e3/Curse_Icon.gif',
-    'Divine Wrath': 'https://www.tibiawiki.com.br/images/c/cc/Divine_Wrath_Icon.gif',
-    'Dodge': 'https://www.tibiawiki.com.br/images/2/25/Dodge_Icon.gif',
-    'Enflame': 'https://www.tibiawiki.com.br/images/7/74/Enflame_Icon.gif',
-    'Freeze': 'https://www.tibiawiki.com.br/images/7/72/Freeze_Icon.gif',
-    'Low Blow': 'https://www.tibiawiki.com.br/images/8/8c/Low_Blow_Icon.gif',
-    'Overpower': 'https://www.tibiawiki.com.br/images/2/2b/Overpower_Icon.gif',
-    'Overflux': 'https://www.tibiawiki.com.br/images/2/20/Overflux_Icon.gif',
-    'Parry': 'https://www.tibiawiki.com.br/images/a/a8/Parry_Icon.gif',
-    'Poison': 'https://www.tibiawiki.com.br/images/5/59/Poison_Icon.gif',
-    'Savage Blow': 'https://www.tibiawiki.com.br/images/e/e6/Savage_Blow_Icon.gif',
-    'Wound': 'https://www.tibiawiki.com.br/images/d/d9/Wound_Icon.gif',
-    'Zap': 'https://www.tibiawiki.com.br/images/2/2f/Zap_Icon.gif',
-    'Adrenaline Burst': 'https://www.tibiawiki.com.br/images/1/1d/Adrenaline_Burst_Icon.gif',
-    'Bless': 'https://www.tibiawiki.com.br/images/6/6c/Bless_Icon.gif',
-    'Cleanse': 'https://www.tibiawiki.com.br/images/9/92/Cleanse_Icon.gif',
-    'Cripple': 'https://www.tibiawiki.com.br/images/9/9c/Cripple_Icon.gif',
-    'Fatal Hold': 'https://www.tibiawiki.com.br/images/b/b8/Fatal_Hold_Icon.gif',
-    'Gut': 'https://www.tibiawiki.com.br/images/f/f0/Gut_Icon.gif',
-    'Numb': 'https://www.tibiawiki.com.br/images/0/03/Numb_Icon.gif',
-    'Scavenge': 'https://www.tibiawiki.com.br/images/5/5f/Scavenge_Icon.gif',
-    'Vampiric Embrace': 'https://www.tibiawiki.com.br/images/4/41/Vampiric_Embrace_Icon.gif',
-    'Void Inversion': 'https://www.tibiawiki.com.br/images/7/79/Void_Inversion_Icon.gif',
-    "Void's Call": 'https://www.tibiawiki.com.br/images/c/c6/Void%27s_Call_Icon.gif',
-}
-BOUNTY_DIFFICULTIES = {'', 'Beginner', 'Adept', 'Expert', 'Master'}
 EDITABLE = set(DEFAULTS) - {"schemaVersion", "revision", "updatedAt", "points", "slot0"}
 STATE_PATH = ROOT / "dados" / "bounty-state.json"
 CREATURE_INFO_CACHE_PATH = ROOT / "dados" / "creature-info-cache.json"

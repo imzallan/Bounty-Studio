@@ -23,11 +23,36 @@ if ($BountySourceMode) {
     $BountyHtmlText = $BountyHtmlText.Replace('<span class="app-version">v1.0</span>', '<span class="app-version">' + $BountyDisplayVersion + '</span>')
     $BountyHtml = $BountyUtf8.GetBytes($BountyHtmlText)
 }
-$BountyDefaultText = [regex]::Match($BountyHtmlText, '<script id="bounty-defaults" type="application/json">(.*?)</script>', [System.Text.RegularExpressions.RegexOptions]::Singleline).Groups[1].Value
+$BountyDataDir = Join-Path $BountyRoot 'src\BountyStudio.Shared\Data'
+$BountyHasSharedData = Test-Path -LiteralPath (Join-Path $BountyDataDir 'rules.json')
+
+if ($BountyHasSharedData) {
+    $BountyDefaultText = [System.IO.File]::ReadAllText((Join-Path $BountyDataDir 'defaults.json'), $BountyUtf8)
+    $BountyRuleText = [System.IO.File]::ReadAllText((Join-Path $BountyDataDir 'rules.json'), $BountyUtf8)
+    $BountySlotCosts = ([System.IO.File]::ReadAllText((Join-Path $BountyDataDir 'slot-costs.json'), $BountyUtf8)) | ConvertFrom-Json
+    $BountyCreatureText = [System.IO.File]::ReadAllText((Join-Path $BountyDataDir 'creatures.json'), $BountyUtf8)
+    $BountySpriteText = [System.IO.File]::ReadAllText((Join-Path $BountyDataDir 'sprites.json'), $BountyUtf8)
+    $BountyCharmsPath = Join-Path $BountyDataDir 'charms.json'
+    if (Test-Path -LiteralPath $BountyCharmsPath) {
+        $BountyCharmsData = ([System.IO.File]::ReadAllText($BountyCharmsPath, $BountyUtf8)) | ConvertFrom-Json
+        $BountyMajorCharms = @($BountyCharmsData.majorCharms)
+        $BountyMinorCharms = @($BountyCharmsData.minorCharms)
+        $BountyCharmIconUrls = @{}
+        foreach ($prop in $BountyCharmsData.charmIconUrls.PSObject.Properties) { $BountyCharmIconUrls[$prop.Name] = $prop.Value }
+        $BountyDifficulties = @($BountyCharmsData.difficulties)
+    }
+}
+else {
+    $BountyDefaultText = [regex]::Match($BountyHtmlText, '<script id="bounty-defaults" type="application/json">(.*?)</script>', [System.Text.RegularExpressions.RegexOptions]::Singleline).Groups[1].Value
+    $BountyRuleText = [regex]::Match($BountyHtmlText, '<script id="bounty-rules" type="application/json">(.*?)</script>', [System.Text.RegularExpressions.RegexOptions]::Singleline).Groups[1].Value
+    $BountySlotCosts = ([regex]::Match($BountyHtmlText, '<script id="bounty-slot-costs" type="application/json">(.*?)</script>', [System.Text.RegularExpressions.RegexOptions]::Singleline).Groups[1].Value) | ConvertFrom-Json
+    $BountyCreatureText = [regex]::Match($BountyHtmlText, '<script id="bounty-creatures" type="application/json">(.*?)</script>', [System.Text.RegularExpressions.RegexOptions]::Singleline).Groups[1].Value
+    $BountySpriteText = [regex]::Match($BountyHtmlText, '<script id="bounty-sprites" type="application/json">(.*?)</script>', [System.Text.RegularExpressions.RegexOptions]::Singleline).Groups[1].Value
+}
+
 $BountyDefaultObject = $BountyDefaultText | ConvertFrom-Json
 $BountyDefaults = @{}
 foreach ($property in $BountyDefaultObject.PSObject.Properties) { $BountyDefaults[$property.Name] = $property.Value }
-$BountyRuleText = [regex]::Match($BountyHtmlText, '<script id="bounty-rules" type="application/json">(.*?)</script>', [System.Text.RegularExpressions.RegexOptions]::Singleline).Groups[1].Value
 $BountyRules = @{}
 foreach ($property in ($BountyRuleText | ConvertFrom-Json).PSObject.Properties) { $BountyRules[$property.Name] = $property.Value }
 $BountyLevelValues = @{}
@@ -48,34 +73,34 @@ foreach ($key in $BountyRules.Keys) {
     $BountyLevelValues[$key] = $values.ToArray()
     $BountySpentByLevel[$key] = $spent.ToArray()
 }
-$BountySlotCosts = ([regex]::Match($BountyHtmlText, '<script id="bounty-slot-costs" type="application/json">(.*?)</script>', [System.Text.RegularExpressions.RegexOptions]::Singleline).Groups[1].Value) | ConvertFrom-Json
 $BountyCreatures = @{}
-$BountyCreatureText = [regex]::Match($BountyHtmlText, '<script id="bounty-creatures" type="application/json">(.*?)</script>', [System.Text.RegularExpressions.RegexOptions]::Singleline).Groups[1].Value
 foreach ($creature in ($BountyCreatureText | ConvertFrom-Json)) { $BountyCreatures[$creature.name] = $creature }
 $BountyEmbeddedSprites = @{}
-$BountySpriteText = [regex]::Match($BountyHtmlText, '<script id="bounty-sprites" type="application/json">(.*?)</script>', [System.Text.RegularExpressions.RegexOptions]::Singleline).Groups[1].Value
 foreach ($property in ($BountySpriteText | ConvertFrom-Json).PSObject.Properties) { $BountyEmbeddedSprites[$property.Name] = $property.Value }
 $BountyLimits = @{}
 foreach ($key in $BountyRules.Keys) { $BountyLimits[$key] = $BountyRules[$key].max }
 $BountyEditable = @($BountyDefaults.Keys | Where-Object { $_ -notin @('schemaVersion','revision','updatedAt','points','slot0') })
-$BountyMajorCharms = @('Carnage','Curse','Divine Wrath','Dodge','Enflame','Freeze','Low Blow','Overpower','Overflux','Parry','Poison','Savage Blow','Wound','Zap')
-$BountyMinorCharms = @('Adrenaline Burst','Bless','Cleanse','Cripple','Fatal Hold','Gut','Numb','Scavenge','Vampiric Embrace','Void Inversion',"Void's Call")
-$BountyCharmIconUrls = @{
-    'Carnage'='https://www.tibiawiki.com.br/images/3/30/Carnage_Icon.gif'; 'Curse'='https://www.tibiawiki.com.br/images/e/e3/Curse_Icon.gif'
-    'Divine Wrath'='https://www.tibiawiki.com.br/images/c/cc/Divine_Wrath_Icon.gif'; 'Dodge'='https://www.tibiawiki.com.br/images/2/25/Dodge_Icon.gif'
-    'Enflame'='https://www.tibiawiki.com.br/images/7/74/Enflame_Icon.gif'; 'Freeze'='https://www.tibiawiki.com.br/images/7/72/Freeze_Icon.gif'
-    'Low Blow'='https://www.tibiawiki.com.br/images/8/8c/Low_Blow_Icon.gif'; 'Overpower'='https://www.tibiawiki.com.br/images/2/2b/Overpower_Icon.gif'
-    'Overflux'='https://www.tibiawiki.com.br/images/2/20/Overflux_Icon.gif'; 'Parry'='https://www.tibiawiki.com.br/images/a/a8/Parry_Icon.gif'
-    'Poison'='https://www.tibiawiki.com.br/images/5/59/Poison_Icon.gif'; 'Savage Blow'='https://www.tibiawiki.com.br/images/e/e6/Savage_Blow_Icon.gif'
-    'Wound'='https://www.tibiawiki.com.br/images/d/d9/Wound_Icon.gif'; 'Zap'='https://www.tibiawiki.com.br/images/2/2f/Zap_Icon.gif'
-    'Adrenaline Burst'='https://www.tibiawiki.com.br/images/1/1d/Adrenaline_Burst_Icon.gif'; 'Bless'='https://www.tibiawiki.com.br/images/6/6c/Bless_Icon.gif'
-    'Cleanse'='https://www.tibiawiki.com.br/images/9/92/Cleanse_Icon.gif'; 'Cripple'='https://www.tibiawiki.com.br/images/9/9c/Cripple_Icon.gif'
-    'Fatal Hold'='https://www.tibiawiki.com.br/images/b/b8/Fatal_Hold_Icon.gif'; 'Gut'='https://www.tibiawiki.com.br/images/f/f0/Gut_Icon.gif'
-    'Numb'='https://www.tibiawiki.com.br/images/0/03/Numb_Icon.gif'; 'Scavenge'='https://www.tibiawiki.com.br/images/5/5f/Scavenge_Icon.gif'
-    'Vampiric Embrace'='https://www.tibiawiki.com.br/images/4/41/Vampiric_Embrace_Icon.gif'; 'Void Inversion'='https://www.tibiawiki.com.br/images/7/79/Void_Inversion_Icon.gif'
-    "Void's Call"='https://www.tibiawiki.com.br/images/c/c6/Void%27s_Call_Icon.gif'
+
+if (-not $BountyMajorCharms) {
+    $BountyMajorCharms = @('Carnage','Curse','Divine Wrath','Dodge','Enflame','Freeze','Low Blow','Overpower','Overflux','Parry','Poison','Savage Blow','Wound','Zap')
+    $BountyMinorCharms = @('Adrenaline Burst','Bless','Cleanse','Cripple','Fatal Hold','Gut','Numb','Scavenge','Vampiric Embrace','Void Inversion',"Void's Call")
+    $BountyCharmIconUrls = @{
+        'Carnage'='https://www.tibiawiki.com.br/images/3/30/Carnage_Icon.gif'; 'Curse'='https://www.tibiawiki.com.br/images/e/e3/Curse_Icon.gif'
+        'Divine Wrath'='https://www.tibiawiki.com.br/images/c/cc/Divine_Wrath_Icon.gif'; 'Dodge'='https://www.tibiawiki.com.br/images/2/25/Dodge_Icon.gif'
+        'Enflame'='https://www.tibiawiki.com.br/images/7/74/Enflame_Icon.gif'; 'Freeze'='https://www.tibiawiki.com.br/images/7/72/Freeze_Icon.gif'
+        'Low Blow'='https://www.tibiawiki.com.br/images/8/8c/Low_Blow_Icon.gif'; 'Overpower'='https://www.tibiawiki.com.br/images/2/2b/Overpower_Icon.gif'
+        'Overflux'='https://www.tibiawiki.com.br/images/2/20/Overflux_Icon.gif'; 'Parry'='https://www.tibiawiki.com.br/images/a/a8/Parry_Icon.gif'
+        'Poison'='https://www.tibiawiki.com.br/images/5/59/Poison_Icon.gif'; 'Savage Blow'='https://www.tibiawiki.com.br/images/e/e6/Savage_Blow_Icon.gif'
+        'Wound'='https://www.tibiawiki.com.br/images/d/d9/Wound_Icon.gif'; 'Zap'='https://www.tibiawiki.com.br/images/2/2f/Zap_Icon.gif'
+        'Adrenaline Burst'='https://www.tibiawiki.com.br/images/1/1d/Adrenaline_Burst_Icon.gif'; 'Bless'='https://www.tibiawiki.com.br/images/6/6c/Bless_Icon.gif'
+        'Cleanse'='https://www.tibiawiki.com.br/images/9/92/Cleanse_Icon.gif'; 'Cripple'='https://www.tibiawiki.com.br/images/9/9c/Cripple_Icon.gif'
+        'Fatal Hold'='https://www.tibiawiki.com.br/images/b/b8/Fatal_Hold_Icon.gif'; 'Gut'='https://www.tibiawiki.com.br/images/f/f0/Gut_Icon.gif'
+        'Numb'='https://www.tibiawiki.com.br/images/0/03/Numb_Icon.gif'; 'Scavenge'='https://www.tibiawiki.com.br/images/5/5f/Scavenge_Icon.gif'
+        'Vampiric Embrace'='https://www.tibiawiki.com.br/images/4/41/Vampiric_Embrace_Icon.gif'; 'Void Inversion'='https://www.tibiawiki.com.br/images/7/79/Void_Inversion_Icon.gif'
+        "Void's Call"='https://www.tibiawiki.com.br/images/c/c6/Void%27s_Call_Icon.gif'
+    }
+    $BountyDifficulties = @('', 'Beginner','Adept','Expert','Master')
 }
-$BountyDifficulties = @('', 'Beginner','Adept','Expert','Master')
 $BountyState = $BountyDefaults.Clone()
 $BountyStatePath = Join-Path $BountyRoot 'dados\bounty-state.json'
 $BountyCreatureInfoCachePath = Join-Path $BountyRoot 'dados\creature-info-cache.json'

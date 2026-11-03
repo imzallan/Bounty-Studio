@@ -1,57 +1,148 @@
-# Bounty Studio · Live Control
+# Bounty Studio · Aplicativo Desktop (.exe)
 
-Aplicativo Windows para configurar bônus de talismã e Preferred List, visualizar a live e criar um overlay transparente para o OBS. A interface desktop inclui o painel, o servidor local e o codificador de vídeo; o modo Windows não exige Python nem privilégios de administrador. O WebView2 Runtime do Windows é necessário.
+[![Windows Executable](https://img.shields.io/badge/Release-BountyStudio.exe-gold.svg?logo=windows)](https://github.com/imzallan/Bounty-Studio/raw/refs/heads/main/BountyStudio.exe)
+[![CI Build & Tests](https://github.com/imzallan/Bounty-Studio/actions/workflows/ci.yml/badge.svg)](https://github.com/imzallan/Bounty-Studio/actions/workflows/ci.yml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+[![Platform](https://img.shields.io/badge/Platform-Windows%20x64-brightgreen.svg)](https://microsoft.com/windows)
 
-## Baixar o aplicativo
+**Bounty Studio** é um **aplicativo desktop standalone executável (`.exe`)** para Windows, desenvolvido para streamers de Tibia / RubinOT. O programa integra em um único executável portátil o painel de controle da live, o motor de cálculo do **Bounty Talisman** e da **Preferred List**, o codificador de mídia transparente e o gerador de overlay para o OBS Studio.
 
-O executável Windows pronto para uso está disponível diretamente na raiz deste repositório: [baixar BountyStudio.exe](https://github.com/imzallan/Bounty-Studio/raw/refs/heads/main/BountyStudio.exe). No Windows, salve o arquivo em uma pasta gravável pelo usuário, como Downloads, e abra-o. O aplicativo consulta atualizações estáveis do GitHub ao iniciar.
+Não exige instalação, nem Python, nem privilégios de administrador.
 
-## Projeto
+---
+
+## 💾 Baixar e Usar o Aplicativo
+
+O executável portátil compilado e pronto para uso está disponível diretamente na raiz deste repositório:
+
+👉 **[Baixar BountyStudio.exe](https://github.com/imzallan/Bounty-Studio/raw/refs/heads/main/BountyStudio.exe)**
+
+### Como Executar:
+1. Salve o arquivo `BountyStudio.exe` em uma pasta com permissão de escrita (como `Downloads`, `Área de Trabalho` ou `%LOCALAPPDATA%`).
+2. Dê duplo clique em **`BountyStudio.exe`**.
+3. A janela desktop do aplicativo abrirá diretamente com a interface de controle.
+4. O aplicativo consulta automaticamente atualizações estáveis no GitHub ao ser iniciado.
+
+> **Requisito**: Windows 10 ou 11 com o *Microsoft WebView2 Runtime* (já presente nativamente na grande maioria dos computadores modernos).
+
+---
+
+## 🖥 O Que o Aplicativo Desktop Faz
+
+- **Janela de Controle Standalone**: Interface desktop moderna com tema escuro nativo (DWM Mica/Dark Caption), controles táteis de atributos e visualização em tempo real.
+- **HUD Transparente para OBS Studio**: O aplicativo gera localmente uma transmissão de overlay em 1200 × 360 px com animações fluidas, cycling dinâmico de slides e sprites animados em pixel-art das criaturas.
+- **Gerenciador de Bônus e Pontos**: Cálculo automático de custo de progressão para Damage (até 50%), Leech (até 50%), Loot (até 50%), Bestiary (até 100%) e desbloqueio dos 5 slots da Preferred List.
+- **Exportador Integrado de Vídeo Transparente**: Motor FFmpeg embutido dentro do executável para renderizar e salvar clipes `.webm` com transparência real (canal alfa) e imagens `.png`.
+- **Auto-Atualizador Seguro**: Atualização direta por download HTTPS e conferência criptográfica SHA-256 informada pela API de Releases do GitHub, sem solicitar elevação de privilégios.
+
+---
+
+## 🏛 Arquitetura do Aplicativo (`BountyStudio.exe`)
+
+```mermaid
+graph TD
+    User([Usuário / Streamer]) -->|Executa| Exe["BountyStudio.exe\n(Aplicação Windows Desktop Standalone)"]
+
+    subgraph AppInternal ["Interior do Executável (.exe)"]
+        WinForms["Janela Desktop WinForms\n(Dark Chrome + DWM API)"]
+        WebView["Motor Gráfico WebView2\n(Renderização da UI do Painel)"]
+        CoreEngine["Engine Local de Estado\n(Cálculo de Pontos e Persistência)"]
+        FFmpegBin["FFmpeg Encoder Embutido\n(Renderizador WebM Transparente)"]
+        SharedData[("Dados Base Embutidos\nRules, Creatures, Charms")]
+
+        WinForms --> WebView
+        WebView <--> CoreEngine
+        CoreEngine --> SharedData
+        CoreEngine --> FFmpegBin
+    end
+
+    Exe --> AppInternal
+
+    CoreEngine -->|Salva Configurações| StateFile[("%LOCALAPPDATA%/Bounty Studio/dados/bounty-state.json")]
+    CoreEngine -->|Transmite HUD 1200x360| OBS["OBS Studio (Browser Source)"]
+```
+
+---
+
+## 📺 Integrando o Aplicativo com o OBS Studio
+
+Com o **`BountyStudio.exe`** aberto:
+
+1. No OBS Studio, adicione uma nova fonte do tipo **Navegador** (Browser Source).
+2. Preencha a URL com:
+   ```text
+   http://127.0.0.1:8787/overlay
+   ```
+3. Defina as dimensões:
+   - **Largura**: `1200`
+   - **Altura**: `360`
+4. O HUD transparente aparecerá imediatamente na sua cena, sincronizado em tempo real com os ajustes feitos na janela do aplicativo.
+
+---
+
+## 🔨 Compilando o Executável a Partir do Código-Fonte
+
+O projeto adota o compilador `csc.exe` embutido nativamente em qualquer Windows com .NET Framework 4.8. Não é necessário instalar SDKs pesados.
+
+Para compilar um novo `BountyStudio.exe`:
+
+```powershell
+./scripts/build.ps1
+```
+
+O script empacota todos os componentes internos (interface, motor, dados e codificador de vídeo) em um binário único e autossuficiente:
+- Binário de distribuição: `dist/BountyStudio.exe`
+- Binário raiz atualizado: `./BountyStudio.exe`
+
+Para compilar especificando a versão e o repositório de atualização do GitHub:
+```powershell
+./scripts/build.ps1 -Version 1.0.1 -GitHubRepository imzallan/Bounty-Studio
+```
+
+---
+
+## 🧪 Testes Automatizados
+
+O repositório possui uma suíte rigorosa de 38 testes para garantir a integridade dos cálculos do aplicativo:
+
+```powershell
+./scripts/test.ps1
+```
+
+- **Testes Unitários de Regras (`tests/Test-BountyRules.ps1`)**:
+  - Valida as faixas de custo progressivo (`initialCost`, `costStep`).
+  - Valida os limites máximos de atributos (Damage, Leech e Loot em 50%, Bestiary em 100%).
+  - Valida o custo total de desbloqueio de slots (3.000 pontos).
+- **Testes de Integração da Engine (`tests/Test-ServerApi.ps1`)**:
+  - Valida o ciclo de vida do motor interno, integridade do estado e persistência atômica.
+
+---
+
+## 📂 Organização do Repositório
 
 ```text
-assets/ffmpeg/             Codificador Windows e licenças
-docs/                      Guia do usuário e créditos de terceiros
-src/BountyStudio.Desktop/   Aplicativo WinForms/WebView2 e compilação
-src/BountyStudio.Server/    Servidores local Windows e Python
-src/BountyStudio.Web/       Painel e overlay
+├── BountyStudio.exe           Executável Windows pronto para uso (distribuição direta)
+├── BountyStudio.sln           Solução para Visual Studio / VS Code / Rider
+├── INICIAR_WINDOWS.bat        Launcher auxiliar para Windows
+├── INICIAR_MAC_LINUX.command  Launcher auxiliar para Unix/macOS
+├── CONTRIBUTING.md            Diretrizes de desenvolvimento e código
+├── README.md                  Documentação oficial do aplicativo
+├── scripts/
+│   ├── build.ps1              Compilação do executável BountyStudio.exe
+│   ├── test.ps1               Suíte unificada de testes automatizados
+│   ├── dev.ps1                Execução em ambiente de desenvolvimento
+│   ├── bundle-web.ps1         Sincronização de dados embutidos
+│   └── clean.ps1              Limpeza de temporários e artefatos de build
+├── src/
+│   ├── BountyStudio.Desktop/  Código-fonte C# da aplicação desktop (Janela, Shell, Updater)
+│   ├── BountyStudio.Server/   Engine interna de IPC, estado e codificação
+│   ├── BountyStudio.Shared/   Fonte única de dados (schemas JSON de regras e bestiário)
+│   └── BountyStudio.Web/      Assets visuais renderizados pela janela do aplicativo
+└── tests/                     Suíte de testes de regras matemáticas e integração
 ```
 
-`dados/` contém configuração e caches locais e nunca deve ser publicado. `dist/` e `src/BountyStudio.Desktop/obj/` são gerados durante a compilação e também ficam fora do Git.
+---
 
-## Compilar no Windows
+## 📄 Licença
 
-Abra PowerShell na raiz do projeto:
-
-```powershell
-./src/BountyStudio.Desktop/build.ps1
-```
-
-O executável sai em `dist/BountyStudio.exe`. Para preparar builds de release manualmente, informe a versão e o identificador `owner/repository` do GitHub:
-
-```powershell
-./src/BountyStudio.Desktop/build.ps1 -Version 1.0.0 -GitHubRepository owner/repository
-```
-
-O build local sem repositório definido continua funcionando, mas não consulta atualizações. A action de release define automaticamente o repositório do GitHub e injeta essa origem no executável publicado.
-
-## Releases e atualização automática
-
-Crie uma release estável com uma tag SemVer, por exemplo `v1.0.1`. A action `.github/workflows/release-windows.yml` compila o aplicativo em Windows e publica `BountyStudio.exe` como asset da release. Ao iniciar, o executável consulta a release estável mais recente. Se houver uma versão mais nova, baixa o asset por HTTPS, confere o SHA-256 informado pela API do GitHub, troca o executável e o inicia novamente. Se a rede estiver indisponível ou a resposta não puder ser validada, o aplicativo atual continua abrindo.
-
-O atualizador não solicita elevação de administrador. Portanto, o executável deve ficar em uma pasta gravável pelo usuário (como Downloads ou `%LOCALAPPDATA%`). Não há certificado Authenticode incluído; a verificação do asset reduz riscos de corrupção ou troca no transporte, mas não substitui a assinatura digital do publicador.
-
-As próximas releases geradas pelo workflow também terão um arquivo SHA-256 e uma atestação de procedência do GitHub. Para verificar a origem do executável baixado, instale o GitHub CLI e execute `gh attestation verify BountyStudio.exe -R imzallan/Bounty-Studio`. O atualizador integrado continua validando o digest publicado pelo GitHub; ele não verifica a atestação Sigstore nem uma assinatura Authenticode.
-
-Consulte [docs/SEGURANCA_GITHUB.md](docs/SEGURANCA_GITHUB.md) para configurar a proteção da branch principal, das tags de release, da conta mantenedora e dos recursos de segurança do GitHub.
-
-## Desenvolvimento
-
-- Faça alterações da interface em `src/BountyStudio.Web/`.
-- O servidor Windows é PowerShell 5.1+, sem módulos externos; `src/BountyStudio.Server/servidor.py` usa somente a biblioteca padrão do Python 3.8+.
-- Atualize `VERSION` e publique uma tag `v<versão>` para distribuir uma release.
-- Mantenha dados de usuários e caches fora dos commits. Builds locais continuam em `dist/`; o `BountyStudio.exe` da raiz é a distribuição Windows incluída no repositório.
-- Consulte `docs/GUIA.md` para o uso do aplicativo e `docs/CREDITOS.md` para os componentes e licenças de terceiros.
-
-## Licença
-
-O código original do Bounty Studio está sob a licença [MIT](LICENSE). Componentes de terceiros mantêm suas próprias licenças; consulte `docs/CREDITOS.md` e os arquivos de licença distribuídos junto a cada componente. Em particular, o FFmpeg incluído está sob GPLv3.
+Distribuído sob a licença [MIT](LICENSE). Componentes integrados de terceiros (FFmpeg e WebView2) mantêm suas respectivas licenças; consulte [docs/CREDITOS.md](docs/CREDITOS.md).
