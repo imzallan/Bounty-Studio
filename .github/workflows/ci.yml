@@ -1,0 +1,32 @@
+name: CI - Build & Tests
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  test:
+    name: Unit & Integration Tests
+    runs-on: windows-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Run Python Unit Tests
+        run: python -m unittest tests/test_bounty.py
+
+      - name: Run PowerShell Test Suite
+        shell: pwsh
+        run: ./scripts/test.ps1
+
+      - name: Test Desktop Application Compilation
+        shell: pwsh
+        run: ./scripts/build.ps1 -Version 1.0.0
+
