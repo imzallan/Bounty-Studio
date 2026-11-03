@@ -6,6 +6,9 @@ on:
   pull_request:
     branches: [ main ]
 
+permissions:
+  contents: read
+
 jobs:
   test:
     name: Unit & Integration Tests
@@ -29,4 +32,3 @@ jobs:
       - name: Test Desktop Application Compilation
         shell: pwsh
         run: ./scripts/build.ps1 -Version 1.0.0
-
